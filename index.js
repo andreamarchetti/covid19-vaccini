@@ -53,6 +53,11 @@ const getCurrentReleaseMarker = async (client) => {
 const checkRemoteUpdates = async (client) => {
   const currentReleaseMarker = await getCurrentReleaseMarker(client)
   const remoteReleaseMarker = await getRemoteReleaseMarker()
+  console.log(
+    'to update check: ',
+    currentReleaseMarker.ultimo_aggiornamento, remoteReleaseMarker.ultimo_aggiornamento,
+    currentReleaseMarker.ultimo_aggiornamento !== remoteReleaseMarker.ultimo_aggiornamento
+  )
   return (currentReleaseMarker.ultimo_aggiornamento !== remoteReleaseMarker.ultimo_aggiornamento)
 }
 
