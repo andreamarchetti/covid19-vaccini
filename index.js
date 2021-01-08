@@ -149,13 +149,13 @@ app.get('/', (req, res) => {
   res.send('Hello Vax!')
 })
 
-app.get('/latest/json', (req, res) => {
+app.get('/v0/latest/json', (req, res) => {
   const dataSet = memCache.get()
   const jsonMapped = mapOutputJsonFields(dataSet)
   return res.json(jsonMapped)
 })
 
-app.get('/latest/:fileName/json', (req, res) => {
+app.get('/v0/latest/:fileName/json', (req, res) => {
   const dataSet = memCache.get()
   const jsonMapped = mapOutputJsonFields(dataSet)
   const fileFiltered = filterOutputFile(jsonMapped, req.params.fileName)
@@ -163,5 +163,5 @@ app.get('/latest/:fileName/json', (req, res) => {
 })
 
 app.listen(port, () => {
-  console.log(`Example app listening at http://localhost:${port}`)
+  console.log(`Vax data API listening at http://localhost:${port}`)
 })
