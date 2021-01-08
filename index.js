@@ -3,6 +3,7 @@ require('dotenv').config()
 const express = require('express')
 const { Client } = require('pg')
 const axios = require('axios')
+const cors = require('cors')
 
 const app = express()
 const port = process.env.APP_PORT || 8080
@@ -144,6 +145,8 @@ const filterOutputFile = (dataSet, fileName) => {
 }
 
 init()
+
+app.use(cors())
 
 app.get('/', (req, res) => {
   res.send('Hello Vax!')
