@@ -4,6 +4,7 @@ const express = require('express')
 const { Client } = require('pg')
 const axios = require('axios')
 const cors = require('cors')
+const telegramBot = require('./utils/telegramBotNotifier')
 
 const app = express()
 const port = process.env.APP_PORT || 8080
@@ -54,15 +55,20 @@ const getCurrentReleaseMarker = async (client) => {
 const checkRemoteUpdates = async (client) => {
   const currentReleaseMarker = await getCurrentReleaseMarker(client)
   const remoteReleaseMarker = await getRemoteReleaseMarker()
-  console.log(
-    'to update check: ',
-    currentReleaseMarker.ultimo_aggiornamento, remoteReleaseMarker.ultimo_aggiornamento,
-    currentReleaseMarker.ultimo_aggiornamento !== remoteReleaseMarker.ultimo_aggiornamento
-  )
+  const checkTesult = `
+    
+    * To update check result *
+    ${currentReleaseMarker.ultimo_aggiornamento}
+    ${remoteReleaseMarker.ultimo_aggiornamento}
+    TO UPDATE: ${currentReleaseMarker.ultimo_aggiornamento !== remoteReleaseMarker.ultimo_aggiornamento}
+  `
+  telegramBot.notify(checkTesult)
+  console.log(checkTesult)
   return (currentReleaseMarker.ultimo_aggiornamento !== remoteReleaseMarker.ultimo_aggiornamento)
 }
 
 const updateLoop = async (client) => {
+  telegramBot.notify('Starting update check...')
   const areUpdatesAvailable = await checkRemoteUpdates(client)
   if (areUpdatesAvailable) await performUpdate(client)
 }
@@ -85,11 +91,13 @@ const performUpdate = async (client) => {
         ("jsonData", "csvData", "fileName", "releaseMarker" ) VALUES
         ('${replaceQuote(JSON.stringify(jsonContent))}', '${replaceQuote(csvContent)}', '${fileName}', '${lastUpdateTimestamp}')
       `)
+      telegramBot.notify('Updated!')
       return result
     }))
     return setMemCache(client)
   } catch (err) {
     console.log(err)
+    telegramBot.notify(err)
     throw err
   }
 }
@@ -115,6 +123,7 @@ const setMemCache = async (client) => {
 }
 
 const init = async () => {
+  telegramBot.notify('Vax API started')
   const client = await connectDB()
   await updateLoop(client)
   await setMemCache(client)
