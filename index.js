@@ -52,25 +52,30 @@ const getCurrentReleaseMarker = async (client) => {
   return latestReleaseMarker.rows[0].jsonData
 }
 
-const checkRemoteUpdates = async (client) => {
-  const currentReleaseMarker = await getCurrentReleaseMarker(client)
+const isDataSetCached = async (client) => {
   const remoteReleaseMarker = await getRemoteReleaseMarker()
-  const checkTesult = `
-    
-    * To update check result *
-    ${currentReleaseMarker.ultimo_aggiornamento}
-    ${remoteReleaseMarker.ultimo_aggiornamento}
-    TO UPDATE: ${currentReleaseMarker.ultimo_aggiornamento !== remoteReleaseMarker.ultimo_aggiornamento}
+  console.log(remoteReleaseMarker)
+  const localDataSet = await client.query(`
+    SELECT "jsonData"
+    FROM "rawFiles"
+    WHERE "fileName" = 'last-update-dataset'
+    AND "releaseMarker" = '${remoteReleaseMarker.ultimo_aggiornamento}'
+    ORDER BY "releaseMarker" DESC
+    LIMIT 1
+  `)
+  const checkResult = `
+    * Performed check *
+    ${remoteReleaseMarker.ultimo_aggiornamento} is in db? ${localDataSet.rows.length ? 'YES' : 'NO'}
   `
-  telegramBot.notify(checkTesult)
-  console.log(checkTesult)
-  return (currentReleaseMarker.ultimo_aggiornamento !== remoteReleaseMarker.ultimo_aggiornamento)
+  telegramBot.notify(checkResult)
+  console.log(checkResult)
+  return localDataSet.rows.length
 }
 
 const updateLoop = async (client) => {
   telegramBot.notify('Starting update check...')
-  const areUpdatesAvailable = await checkRemoteUpdates(client)
-  if (areUpdatesAvailable) await performUpdate(client)
+  const isRemoteDataSetCached = await isDataSetCached(client)
+  if (!isRemoteDataSetCached) await performUpdate(client)
 }
 
 const replaceQuote = (text) => {
